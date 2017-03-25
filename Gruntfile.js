@@ -11,6 +11,7 @@ module.exports = function (grunt) {
 					'src/extensions/array.js',
 					'src/additionals/constants.js',
 					'src/additionals/utils.js',
+					'src/additionals/methods.js',
 					'src/tteditor.js'
 				]
 			}
@@ -32,6 +33,7 @@ module.exports = function (grunt) {
 					'dist/extensions/array.js': 'src/extensions/array.js',
 					'dist/additionals/constants.js': 'src/additionals/constants.js',
 					'dist/additionals/utils.js': 'src/additionals/utils.js',
+					'dist/additionals/methods.js': 'src/additionals/methods.js',
 					'dist/<%= pkg.name %>.js': 'dist/<%= pkg.name %>.js'
 				}
 			}

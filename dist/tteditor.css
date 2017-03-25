@@ -1,6 +1,7 @@
 .CodeMirror {
-	height: 100% !important;
+	height: 100%;
 	color: #333;
+	background-color: #fff;
 	font-family: Georgia, Cambria, "Times New Roman", Times, serif;
 	letter-spacing: .01rem;
 	font-weight: 400;
