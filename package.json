@@ -1,0 +1,33 @@
+{
+  "name": "tteditor",
+  "version": "1.0.0",
+  "description": "A RichText editor javascript library, based on CodeMirror framework.",
+  "main": "src/tteditor.js",
+  "dependencies": {
+    "gulp": "^3.9.1"
+  },
+  "devDependencies": {
+    "browserify": "^14.1.0",
+    "codemirror": "^5.25.0",
+    "grunt": "^1.0.1",
+    "grunt-browserify": "^5.0.0",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^2.0.0",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-uglify": "^2.2.0",
+    "jquery": "^3.2.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "TTEditor",
+    "TekTalkEditor",
+    "TekTalk.vn",
+    "WYSIWYG",
+    "Javascript"
+  ],
+  "author": "dphans (baophan94@icloud.com)",
+  "license": "ISC"
+}
