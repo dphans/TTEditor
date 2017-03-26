@@ -6,15 +6,30 @@
 	<link rel="stylesheet" href="./uikit.min.css" />
 	<link rel="stylesheet" type="text/css" href="../dist/tteditor.min.css">
 	<style type="text/css">
-		body {
-			background-color: #eee;
+		.TTEditor-Panel-Insertion-Button {
+			background-color: #fff;
+		}
+		.TTEditor-Panel-Insertion-Button:hover {
+			background-color: #000;
+			color: #fff;
+		}
+
+		.TTEditor-Panel-Insertion-Items {
+			background-color: #fff;
+			box-shadow: none;
+			-webkit-box-shadow: none;
+			-moz-box-shadow: none;
+			width: inherit;
+			height: 32px;
+			padding: 0px;
+			margin: 0px;
 		}
 	</style>
 </head>
 <body>
 
 <div class="uk-container uk-padding uk-article" uk-height-viewport>
-	<textarea id="my-editor" hidden></textarea>
+	<textarea id="my-editor", placeholder="write something..." hidden></textarea>
 </div>
 
 <script type="text/javascript" src="./jquery.min.js"></script>

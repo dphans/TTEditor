@@ -1,7 +1,62 @@
+/* Editor Container */
+
+.TTEditor {
+	position: relative;
+	height: 100%;
+}
+
+/* Toolbar */
+
+.TTEditor-Panel-Insertion-Container {
+	position: absolute;
+	background-color: transparent;
+	height: 100%;
+	width: 45px;
+	top: 0px;
+	left: 0px;
+	z-index: 999;
+	padding: 0px;
+}
+
+.TTEditor-Panel-Insertion-Content {
+	position: fixed;
+	widows: inherit;
+	height: inherit;
+	top: 0px;
+	left: 64px;
+	margin: 0px;
+	padding: 0px;
+	display: none;
+}
+
+.TTEditor-Panel-Insertion-Button {
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	background-color: transparent;
+	border: 1px solid #333;
+	border-radius: 16px;
+	margin: 0;
+	text-transform: none;
+	box-sizing: border-box;
+	-webkit-transition: .1s ease-in-out;
+	transition: .1s ease-in-out;
+	-webkit-transition-property: color,background-color,border-color;
+	transition-property: color,background-color,border-color;
+}
+
+.TTEditor-Panel-Insertion-Button:focus {
+	outline: 0;
+}
+
+
+/* Core Override */
+
 .CodeMirror {
 	height: 100%;
 	color: #333;
-	background-color: #fff;
+	background-color: transparent;
 	font-family: Georgia, Cambria, "Times New Roman", Times, serif;
 	letter-spacing: .01rem;
 	font-weight: 400;
@@ -9,6 +64,7 @@
 	font-size: 21px;
 	line-height: 1.58;
 	letter-spacing: -.003em;
+	margin-left: 45px;
 }
 
 .CodeMirror-placeholder {
