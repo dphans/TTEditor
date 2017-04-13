@@ -1,179 +1,204 @@
-/* load additional modules */
-var CodeMirror = require('codemirror');
+hljs 				= require('highlight.js');
+var Quill 			= require('quill');
+var Delta 			= require('quill-delta');
+var Constants 		= require('./constraints.js')();
+var quill 			= null;
+var cursorPosition 	= -1;
 
-/* app modules */
-require('./extensions/array.js');
-require('./additionals/utils.js');
-require('./additionals/constants.js');
-require('./additionals/methods.js');
+TTEditor 	= function (elementId, options) {
+	this.options 	= options;
+	this.options 	= this.options || Constants.defaultOptions;
+	this.elementId 	= elementId + 'Editor';
+	
+	var baseDiv  	= document.getElementById(elementId);
 
-/* third-party modules */
-require("codemirror/addon/mode/overlay.js");
-require("codemirror/addon/display/panel.js");
-require("codemirror/addon/display/placeholder.js");
-require("codemirror/addon/selection/active-line.js");
-require("codemirror/addon/selection/mark-selection.js");
+	var toolbar 	= document.createElement('div');
+	toolbar.id 		= elementId + 'Toolbar';
+	baseDiv.appendChild(toolbar);
+	var contents 	= document.createElement('div');
+	var editor  	= document.createElement('div');
+	editor.id 	 	= this.elementId;
+	contents.appendChild(editor);
+	baseDiv.appendChild(contents);
 
-require("codemirror/mode/gfm/gfm.js");
-require("codemirror/mode/xml/xml.js");
-
-/* values */
-var Props 	= {
-	/* init properties */
-	textAreaId: null,
-	textAreaDOM: null,
-	userOptions: {},
-	ttOptions: {},
-
-	/* runtime properties */
-	currentLine: -1,
-	currentChar: -1
-};
-
-/* default options */
-var Options = {
-	default: {
-		mode: "text/html",
-		tabSize: 4,
-		indentWithTabs: false,
-		lineWrapping: true,
-		lineNumbers: false,
-		showCursorWhenSelecting: true,
-		styleActiveLine: true
-	},
-	override: {
-		autofocus: false
-	},
-	ttOptions: {
-		autoFocus: true,
-		insertButton: true
-	}
-};
-
-/* TTEditor events */
-var Events = {
-
-	/**
-	 * lineChanged(lastLine: Int, currentLine: Int)
-	 * call when user move cursor on editor between lines
-	 * first time: lastLine = -1
-	 */
-	lineChanged: null,
-
-	/**
-	 * cursorChanged(lastPos: { line: Int, char: Int }, currenPos: { line: Int, char: Int })
-	 * call when user move cursor on editor between lines
-	 * first time: lastPos.line = -1, lastPost.char = -1
-	 */
-	cursorChanged: null
-};
-
-TTEditor = function (options, optionals) {
-	Props.userOptions 	= options || {};
-	optionals 			= optionals || {};
-	Props.ttOptions 	= TTEditorUtils.OverrideArray(Options.ttOptions, optionals);
-	Props.userOptions 	= TTEditorUtils.OverrideArray(Options.default, Props.userOptions);
-	Props.userOptions 	= TTEditorUtils.OverrideArray(Props.userOptions, Options.override);
-	Props.textAreaId	= Props.userOptions.element || null;
+	var fileCtner 	= document.createElement('div');
+	var filePicker 	= document.createElement('input');
+	filePicker.id 	= elementId + 'InputFileUpload';
+	filePicker.type = 'file';
+	filePicker.accept = 'image/*';
+	fileCtner.appendChild(filePicker);
+	baseDiv.appendChild(fileCtner);
+	
+	this.toolbar 	= toolbar;
+	this.editor 	= editor;
+	baseDiv.className 		= 'TTEditor-Container';
+	this.toolbar.className 	= 'TTEditor-Toolbar';
+	contents.className 		= 'TTEditor-EditorContent';
+	fileCtner.className 	= 'TTEditor-FormInputFile';
+	Helpers.insertButtonsIntoToolbar(Constants.toolbarItems, this.toolbar);
+	Methods.initToolbarItemsMethods(Constants.toolbarItems);
+	this.autosaveId = baseDiv.getAttribute("tektalk-auto-save-unique") || elementId;
 	return this;
 };
 
-var editor 						= null;
 TTEditor.prototype 				= {};
 TTEditor.prototype.constructor 	= TTEditor;
+TTEditor.prototype.getHelpers 	= function () { return Helpers; };
+TTEditor.prototype.getMethods 	= function () { return Methods; };
+TTEditor.prototype.getConstants = function () { return Constants; };
+TTEditor.prototype.getQuill 	= function () { return quill; };
 
-function refreshLeftInsertionButton() {
-	$('#' + TTEditorDefines.TOOLBAR.INSERTION.CONTENT.ID).css('top', editor.getCurrentLineHeight());
-	if (editor.getCurrentLineText() !== '') {
-		$('#' + TTEditorDefines.TOOLBAR.INSERTION.CONTENT.ID).hide();
-	} else {
-		$('#' + TTEditorDefines.TOOLBAR.INSERTION.CONTENT.ID).show();
-	}
-}
+/* Render on view */
+TTEditor.prototype.render 		= function () {
 
-/* handle core events, binding events */
-function handleCodeMirrorEvents() {
-	if (!editor.codeMirror) return TTEditorUtils.Log(TTEditorConst.Error.CORE_NOT_DEFINED);
-	editor.codeMirror.on('cursorActivity', function (event) {
-		var cursorPosition		= editor.codeMirror.getCursor(true);
-
-		/* handle cursor changed */
-		if (cursorPosition.ch !== Props.currentChar || cursorPosition.line !== Props.currentLine) {
-			refreshLeftInsertionButton();
-			if (typeof Events.cursorChanged === 'function') {
-				Events.cursorChanged({
-					line: Props.currentLine,
-					char: Props.currentChar
-				}, {
-					line: cursorPosition.line,
-					char: cursorPosition.ch
-				});
-			}
-			Props.currentChar 	= cursorPosition.ch;
-		}
-
-		/* handle line changed */
-		if (cursorPosition.line !== Props.currentLine) {
-			if (typeof Events.lineChanged === 'function') {
-				Events.lineChanged(Props.currentLine, cursorPosition.line);
-			}
-			Props.currentLine 	= cursorPosition.line;
-		}
+	// config hightlightjs for code syntax
+	hljs.configure({
+		languages: ['javascript', 'ruby', 'java', 'php', 'objectivec', 'swift']
 	});
 
-	editor.codeMirror.on('focus', function (event) {
-		refreshLeftInsertionButton();
+	// init core library
+	quill 			= new Quill(this.editor, { modules: { syntax: true }, placeholder: 'write something...', debug: 'info' });
+
+	// handle core library events
+	quill.on('editor-change', function (event, data) {
+		var newSelectionChanges	= Helpers.getSelection();
+		Helpers.updateToolbarDisplay();
 	});
-}
 
-/* init */
-TTEditor.prototype.init 		= function () {
-	editor				= this;
+	quill.on('text-change', function (delta, oldDelta, source) {
+		
+	});
 
-	/* collect components */
-	if (!Props.textAreaId) return TTEditorUtils.Log(TTEditorConst.Error.ELEMENT_NOT_FOUND);
-	Props.textAreaDOM	= document.getElementById(Props.textAreaId);
-	if (!Props.textAreaDOM) return TTEditorUtils.Log(TTEditorConst.Error.ELEMENT_NOT_FOUND);
-	if (Props.textAreaDOM.tagName !== 'TEXTAREA') return TTEditorUtils.Log(TTEditorConst.Error.ELEMENT_REQUIRED_TEXTAREA);
-	this.codeMirror 	= CodeMirror.fromTextArea(Props.textAreaDOM, Props.userOptions);
-	
-	/* add panels */
-	var panelDOM 		= TTEditorMethods.generateInsertionPanel();
-	this.codeMirror.addPanel(panelDOM, { position: 'top', stable: true });
-	$('.TTEditor-Panel-Insertion-Container').parent().addClass('TTEditor');
-	if (!Props.ttOptions.insertButton) {
-		$('.TTEditor-Panel-Insertion-Container').css('display', 'none');
-	}
-	
-	/* listen core events */
-	handleCodeMirrorEvents();
-	if (Props.ttOptions.autoFocus) {
-		editor.codeMirror.focus();
-	}
+	quill.on('selection-change', function (range, oldRange, source) {
+		if (range) {
+			cursorPosition = range.index;
+			if ($('#TektalkPanelLink').attr('shown') && range.length <= 0) {
+				$('#TektalkPanelLink').attr('shown', false).hide();
+			};
+		};
+	});
+
+	// handle user press save short key (Cmd + S or Control + S)
+	quill.keyboard.addBinding({ key: 'S', metaKey: true }, function (event) {
+		
+	});
+
+	// remove formatting when user paste contents from other source
+	quill.clipboard.addMatcher(Node.TEXT_NODE, function(node, delta) {
+
+		// user paste youtube link
+		var youtubeIdRegex 	= /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
+		var matchYtId 		= $(node).text().match(youtubeIdRegex);
+		var youtubeId  		=  (matchYtId && matchYtId[7].length == 11 ) ? matchYtId[7] : null;
+		if (youtubeId) {
+			return new Delta([
+				{
+					insert: { video: 'https://www.youtube.com/embed/' + youtubeId },
+					attributes: { align: 'center' }
+				}
+			]);
+		};
+
+		return new Delta().insert(node.data);
+	});
+
+	quill.clipboard.addMatcher(Node.ELEMENT_NODE, function(node, delta) {
+		return new Delta().insert($(node).text());
+	});
+
+	// add link dialog
+	var linkCtner 	= document.createElement('div');
+	linkCtner.style.display = 'none';
+	linkCtner.id 	= 'TektalkPanelLink';
+	linkCtner.className 	= 'TTEditor-Panel TTEditor-Card-Default';
+	var linkInput 	= document.createElement('input');
+	linkInput.id 	= 'TTEditorInputLink';
+	linkInput.type 	= 'text';
+	linkInput.className 	= 'TTEditor-FormInput';
+	linkCtner.appendChild(linkInput);
+	var linkBtns 	= document.createElement('div');
+	linkBtns.align 	= 'right';
+	linkBtns.style.marginRight = '-20px';
+	var linkCancel	= document.createElement('button');
+	linkCancel.type = 'button';
+	linkCancel.className 	= 'TTEditor-Button TTEditor-Button-Cancel';
+	linkCancel.innerText 	= 'Cancel';
+	linkCancel.onclick 		= function (event) { $('#TektalkPanelLink').attr('shown', false).hide(); };
+	linkBtns.appendChild(linkCancel);
+	var linkUpdate	= document.createElement('button');
+	linkUpdate.type = 'button';
+	linkUpdate.className 	= 'TTEditor-Button TTEditor-Button-Primary';
+	linkUpdate.innerText 	= 'Update';
+	linkUpdate.onclick 	= function (event) { Methods.checkAndInsertLink($('#TTEditorInputLink').val()); };
+	linkBtns.appendChild(linkUpdate);
+	linkCtner.appendChild(linkBtns);
+	this.editor.appendChild(linkCtner);
+
 	return this;
 };
 
-/* register TTEditor events. THIS IS OVERRIDE OLDER ONE! */
-TTEditor.prototype.on 			= function (eventName, callback) {
-	if (Events[eventName] === null || typeof Events[eventName] === 'function') {
-		if (typeof callback === 'function') {
-			Events[eventName] = callback;
-		}
-	}
-	return this;
+/* Register listeners */
+TTEditor.prototype.on 			= function (eventName, eventCallback) {
+	if (typeof eventName === 'string' && typeof eventCallback === 'function') {
+		if (typeof Constants.events[eventName] === 'function') {
+			Constants.events[eventName] = eventCallback;
+		};
+	};
 };
 
-/* get current line on editor */
-TTEditor.prototype.getCurrentLine = function () {
-	return Props.currentLine;
+/* JSON Export */
+TTEditor.prototype.exportJSON 	= function () {
+	return Methods.getContentsJSON();
 };
 
-TTEditor.prototype.getCurrentLineHeight = function () {
-	return this.codeMirror.heightAtLine(this.codeMirror.getCursor(true).line);
+/* HTML Export */
+TTEditor.prototype.exportHTML 	= function () {
+	var jsonLines	= Methods.getContentsJSON();
+	var result 		= $('<article></article>');
+	jsonLines.forEach(function (paragraph) {
+		var tag 	= $('<p></p>');
+		if (paragraph.attrName) {
+			var className = 'tektalk-' + paragraph.attrName;
+			if (paragraph.attrValue !== undefined && paragraph.attrValue !== null && paragraph.attrValue !== true) {
+				className = className + '-' + paragraph.attrValue;
+			};
+			tag.addClass(className);
+		};
+		var container = '';
+		paragraph.contents.forEach(function (content) {
+			var body = content.text;
+			Object.keys(content.attributes).forEach(function (attribute) {
+				switch(attribute) {
+					case 'bold':
+						body = '<b>' + body + '</b>';
+						break;
+					case 'italic':
+						body = '<i>' + body + '</i>';
+						break;
+					case 'underline':
+						body = '<u>' + body + '</u>';
+						break;
+					case 'strike':
+						body = '<span class="tektalk-strikethrough">' + body + '</span>';
+						break;
+					case 'code':
+						body = '<code>' + body + '</code>';
+						break;
+					case 'size':
+						body = '<span class="tektalk-size-' + content.attributes[attribute] + '">' + body + '</span>';
+						break;
+					case 'link':
+						body = '<a href="' + content.attributes[attribute] + '" target="_blank">' + body + '</a>';
+						break;
+				};
+			});
+			container += body;
+		});
+		tag.html(container);
+		result.append(tag);
+	});
+	return result.get(0);
 };
 
-TTEditor.prototype.getCurrentLineText = function () {
-	return this.codeMirror.getLine(this.codeMirror.getCursor(true).line);
-};
-
-module.exports = TTEditor;
+var Helpers 		= require('./helpers.js')(TTEditor.prototype);
+var Methods 		= require('./private_methods.js')(TTEditor.prototype);
