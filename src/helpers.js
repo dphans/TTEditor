@@ -23,6 +23,10 @@ module.exports = function (tteditor) {
 			toolbarParent.appendChild(buttonContainer);
 		},
 
+		updateURLPanel: function () {
+			
+		},
+
 		updateToolbarDisplay: function () {
 			var quill 			= tteditor.getQuill();
 			var helpers 		= tteditor.getHelpers();
@@ -79,6 +83,19 @@ module.exports = function (tteditor) {
 			if (!formatName) return false;
 			var selectedFormat = this.getSelectedFormat();
 			return selectedFormat[formatName] != undefined;
+		},
+
+		showURLPanel: function () {
+			if (!$('#TektalkPanelLink').attr('shown')) {
+				$('#TektalkPanelLink').attr('shown', true).show();
+			};
+		},
+
+		hideURLPanel: function () {
+			if ($('#TektalkPanelLink').attr('shown')) {
+				$('#TektalkPanelLink').attr('shown', false).hide();
+			};
 		}
+
 	};
 };

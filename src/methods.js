@@ -81,11 +81,16 @@ module.exports 	= function (tteditor) {
 		},
 
 		checkAndInsertLink: function (linkURL) {
-			if (!linkURL) return;
+			if (!linkURL) {
+				tteditor.getQuill().format('link', '');
+				Helpers.hideURLPanel();
+				return;
+			};
 			if (linkURL.indexOf('http') == -1) { linkURL = 'http://' + linkURL; };
 			var validLink 	= /^(http[s]?:\/\/){0,1}(www\.){0,1}[a-zA-Z0-9\.\-]+\.[a-zA-Z]{2,5}[\.]{0,1}/;
-			if (!linkURL.match(validLink)) { return; };
-			quill.format('link', linkURL);
+			if (!linkURL.match(validLink)) { return Helpers.hideURLPanel(); };
+			tteditor.getQuill().format('link', linkURL);
+			Helpers.hideURLPanel();
 		},
 
 		customActions: {
@@ -97,14 +102,18 @@ module.exports 	= function (tteditor) {
 			editLink: function (sender) {
 				var selection = Helpers.getSelection();
 				if (selection.length > 0) {
+					var bounds 	= tteditor.getQuill().getBounds(selection);
 					if (!Helpers.selectedFormatContains('link')) {
-						var bounds 	= tteditor.getQuill().getBounds(selection);
-						$('#TektalkPanelLink').css({
-							top: bounds.bottom + bounds.height,
-							left: bounds.left
-						}).attr('shown', true).show();
-						$('#TTEditorInputLink').focus();
+						$('#TTEditorInputLink').val('');
+					} else {
+						var formats = Helpers.getSelectedFormat();
+						$('#TTEditorInputLink').val(formats['link']);
 					};
+					$('#TektalkPanelLink').css({
+						top: bounds.bottom + 8,
+						left: (bounds.left + (bounds.width / 2)) - ($('#TektalkPanelLink').width() / 2)
+					}).attr('shown', true).show();
+					$('#TTEditorInputLink').focus();
 				};
 			}
 		}

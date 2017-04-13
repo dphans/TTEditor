@@ -57,7 +57,7 @@ TTEditor.prototype.render 		= function () {
 	});
 
 	// init core library
-	quill 			= new Quill(this.editor, { modules: { syntax: true }, placeholder: 'write something...', debug: 'info' });
+	quill 			= new Quill(this.editor, { modules: { syntax: true }, placeholder: 'write something...' });
 
 	// handle core library events
 	quill.on('editor-change', function (event, data) {
@@ -74,6 +74,15 @@ TTEditor.prototype.render 		= function () {
 			cursorPosition = range.index;
 			if ($('#TektalkPanelLink').attr('shown') && range.length <= 0) {
 				$('#TektalkPanelLink').attr('shown', false).hide();
+			} else if (range.length > 0 && Helpers.selectedFormatContains('link')) {
+				var selection 	= Helpers.getSelection();
+				var bounds 		= quill.getBounds(selection);
+				var formats 	= Helpers.getSelectedFormat();
+				$('#TTEditorInputLink').val(formats['link']);
+				$('#TektalkPanelLink').css({
+					top: bounds.bottom + 8,
+					left: (bounds.left + (bounds.width / 2)) - ($('#TektalkPanelLink').width() / 2)
+				}).attr('shown', true).show();
 			};
 		};
 	});
@@ -110,7 +119,7 @@ TTEditor.prototype.render 		= function () {
 	var linkCtner 	= document.createElement('div');
 	linkCtner.style.display = 'none';
 	linkCtner.id 	= 'TektalkPanelLink';
-	linkCtner.className 	= 'TTEditor-Panel TTEditor-Card-Default';
+	linkCtner.className 	= 'TTEditor-Panel TTEditor-Card-Default TTEditor-Arrow-Bottom';
 	var linkInput 	= document.createElement('input');
 	linkInput.id 	= 'TTEditorInputLink';
 	linkInput.type 	= 'text';
@@ -130,6 +139,7 @@ TTEditor.prototype.render 		= function () {
 	linkUpdate.className 	= 'TTEditor-Button TTEditor-Button-Primary';
 	linkUpdate.innerText 	= 'Update';
 	linkUpdate.onclick 	= function (event) { Methods.checkAndInsertLink($('#TTEditorInputLink').val()); };
+	linkInput.onkeyup 	= function (event) { if (event.keyCode === 13) { Methods.checkAndInsertLink($('#TTEditorInputLink').val()); }; };
 	linkBtns.appendChild(linkUpdate);
 	linkCtner.appendChild(linkBtns);
 	this.editor.appendChild(linkCtner);
@@ -201,4 +211,4 @@ TTEditor.prototype.exportHTML 	= function () {
 };
 
 var Helpers 		= require('./helpers.js')(TTEditor.prototype);
-var Methods 		= require('./private_methods.js')(TTEditor.prototype);
+var Methods 		= require('./methods.js')(TTEditor.prototype);
