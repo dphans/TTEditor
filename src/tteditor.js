@@ -108,6 +108,18 @@ TTEditor.prototype.render 		= function () {
 			]);
 		};
 
+		var imageURLRegex	= /(http)?s?:?(\/\/[^"']*\.(?:png|jpg|jpeg|gif|png|svg))/;
+		var matchImageURL 	= $(node).text().match(imageURLRegex);
+		if (matchImageURL && matchImageURL[0]) {
+			return new Delta([{
+				insert: { image: matchImageURL[0] },
+				attributes: { align: 'center' }
+			}, {
+				insert: '\n',
+				attributes: { align: 'center' }
+			}]);
+		};
+
 		return new Delta().insert(node.data);
 	});
 
