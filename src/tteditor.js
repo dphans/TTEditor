@@ -25,7 +25,12 @@ TTEditor 	= function (elementId, options) {
 	var filePicker 	= document.createElement('input');
 	filePicker.id 	= elementId + 'InputFileUpload';
 	filePicker.type = 'file';
-	filePicker.accept = 'image/*';
+	filePicker.accept 		= 'image/*';
+	filePicker.onchange 	= function (event) {
+		if (typeof Constants.events.filesSelected === 'function') {
+			Constants.events.filesSelected(filePicker.files);
+		};
+	};
 	fileCtner.appendChild(filePicker);
 	baseDiv.appendChild(fileCtner);
 	
@@ -108,6 +113,7 @@ TTEditor.prototype.render 		= function () {
 			]);
 		};
 
+		// user paste image link
 		var imageURLRegex	= /(http)?s?:?(\/\/[^"']*\.(?:png|jpg|jpeg|gif|png|svg))/;
 		var matchImageURL 	= $(node).text().match(imageURLRegex);
 		if (matchImageURL && matchImageURL[0]) {
@@ -159,6 +165,10 @@ TTEditor.prototype.render 		= function () {
 	return this;
 };
 
+TTEditor.prototype.insertPhotoURL = function (url) {
+	quill.insertEmbed(cursorPosition, 'image', url);
+};
+
 /* Register listeners */
 TTEditor.prototype.on 			= function (eventName, eventCallback) {
 	if (typeof eventName === 'string' && typeof eventCallback === 'function') {
@@ -168,58 +178,16 @@ TTEditor.prototype.on 			= function (eventName, eventCallback) {
 	};
 };
 
-/* JSON Export */
-TTEditor.prototype.exportJSON 	= function () {
-	return Methods.getContentsJSON();
+/* Import */
+TTEditor.prototype.import 	= function (ops) {
+	if (typeof ops !== 'object') return;
+	quill.setContents(ops);
 };
 
-/* HTML Export */
-TTEditor.prototype.exportHTML 	= function () {
-	var jsonLines	= Methods.getContentsJSON();
-	var result 		= $('<article></article>');
-	jsonLines.forEach(function (paragraph) {
-		var tag 	= $('<p></p>');
-		if (paragraph.attrName) {
-			var className = 'tektalk-' + paragraph.attrName;
-			if (paragraph.attrValue !== undefined && paragraph.attrValue !== null && paragraph.attrValue !== true) {
-				className = className + '-' + paragraph.attrValue;
-			};
-			tag.addClass(className);
-		};
-		var container = '';
-		paragraph.contents.forEach(function (content) {
-			var body = content.text;
-			Object.keys(content.attributes).forEach(function (attribute) {
-				switch(attribute) {
-					case 'bold':
-						body = '<b>' + body + '</b>';
-						break;
-					case 'italic':
-						body = '<i>' + body + '</i>';
-						break;
-					case 'underline':
-						body = '<u>' + body + '</u>';
-						break;
-					case 'strike':
-						body = '<span class="tektalk-strikethrough">' + body + '</span>';
-						break;
-					case 'code':
-						body = '<code>' + body + '</code>';
-						break;
-					case 'size':
-						body = '<span class="tektalk-size-' + content.attributes[attribute] + '">' + body + '</span>';
-						break;
-					case 'link':
-						body = '<a href="' + content.attributes[attribute] + '" target="_blank">' + body + '</a>';
-						break;
-				};
-			});
-			container += body;
-		});
-		tag.html(container);
-		result.append(tag);
-	});
-	return result.get(0);
+/* Export */
+TTEditor.prototype.export 	= function () {
+	var contents 	= quill.getContents();
+	return contents.ops;
 };
 
 var Helpers 		= require('./helpers.js')(TTEditor.prototype);

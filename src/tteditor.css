@@ -690,3 +690,8 @@ a {
   font-style: italic;
   text-decoration: underline;
 }
+
+.ql-editor > p > img {
+  max-height: 100%;
+  max-width: 100%;
+}

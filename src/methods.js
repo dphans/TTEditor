@@ -95,7 +95,6 @@ module.exports 	= function (tteditor) {
 
 		customActions: {
 			uploadFile: function (sender) {
-
 				$('#TektalkMainEditorInputFileUpload').trigger('click');
 			},
 

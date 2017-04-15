@@ -275,7 +275,8 @@ module.exports = function () {
 			}
 		],
 		events: {
-			localSave: function() {}
+			localSave: function() {},
+			filesSelected: function (files) {}
 		}
 	}
 };

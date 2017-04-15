@@ -28,7 +28,28 @@
 		var editor;
 		function initEditor() {
 			editor = new TTEditor('TektalkMainEditor');
+			editor.on('filesSelected', function (files) {
+				var formData = new FormData();
+				for (var i = 0; i < files.length; i++) {
+					var file = files[i];
+					if (!file.type.match('image.*')) { continue; };
+					formData.append('photos[]', file, file.name);
+				};
+				/*
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', 'handler.php', true);
+				xhr.onload = function () {
+					if (xhr.status === 200) {
+
+					} else {
+
+					};
+				};
+				xhr.send(formData);
+				*/
+			});
 			editor.render();
+			
 		};
 	</script>
 
